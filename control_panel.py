@@ -20,6 +20,8 @@ app = Flask(
     __name__, template_folder=str(BASE_DIR / "templates"), static_folder=str(BASE_DIR / "static")
 )
 
+ENV_FILE = BASE_DIR / ".env"
+
 log_buffer = LogBuffer(LOG_MAX_LINES)
 control_config: Dict[str, Any] = load_control_defaults()
 chat_runner = ChatRunner(log_buffer)
@@ -44,6 +46,43 @@ def _update_config_from_form(form_data: Dict[str, str]) -> List[str]:
             except ValueError:
                 warnings.append(f"Invalid input for {key}.")
     return warnings
+
+
+def _write_env_updates(updates: Dict[str, str]) -> None:
+    existing_lines = []
+    seen_keys = set()
+    if ENV_FILE.exists():
+        existing_lines = ENV_FILE.read_text().splitlines()
+
+    new_lines: List[str] = []
+    for line in existing_lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in line:
+            new_lines.append(line)
+            continue
+        key, _ = line.split("=", 1)
+        key = key.strip()
+        if key in updates:
+            new_lines.append(f"{key}={updates[key]}")
+            seen_keys.add(key)
+        else:
+            new_lines.append(line)
+
+    for key, value in updates.items():
+        if key not in seen_keys:
+            new_lines.append(f"{key}={value}")
+
+    ENV_FILE.write_text("\n".join(new_lines) + ("\n" if new_lines else ""))
+
+
+def _persist_schedule_settings() -> None:
+    updates = {
+        "CHAT_DEFAULT_START_HOUR": "" if control_config.get("start_hour") is None else str(control_config["start_hour"]),
+        "CHAT_DEFAULT_START_MINUTE": "" if control_config.get("start_minute") is None else str(control_config["start_minute"]),
+        "CHAT_DEFAULT_STOP_HOUR": "" if control_config.get("stop_hour") is None else str(control_config["stop_hour"]),
+        "CHAT_DEFAULT_STOP_MINUTE": "" if control_config.get("stop_minute") is None else str(control_config["stop_minute"]),
+    }
+    _write_env_updates(updates)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -91,6 +130,12 @@ def control() -> str:
         elif action == "restart":
             chat_runner.restart(control_config)
             message_segments.append("🔁 Chat restarted.")
+
+        if action in {"save", "start", "restart", "stop"}:
+            try:
+                _persist_schedule_settings()
+            except Exception:
+                message_segments.append("⚠️ Failed to persist schedule to .env.")
 
     running = chat_runner.is_running()
     schedule_enabled = None not in (
