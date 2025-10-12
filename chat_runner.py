@@ -81,6 +81,7 @@ class ChatRunner:
             with self._lock:
                 if self._process is proc:
                     self._process = None
+        self._clear_display()
         return True
 
     def restart(self, chat_config: Dict[str, Any]) -> None:
@@ -129,6 +130,16 @@ class ChatRunner:
         with self._lock:
             if self._process is process:
                 self._process = None
+        self._clear_display()
+
+    def _clear_display(self) -> None:
+        """Best-effort clear of the attached console to prevent burn-in."""
+        try:
+            with open("/dev/tty1", "w", encoding="utf-8", errors="ignore") as lcd:
+                lcd.write("\033c")
+                lcd.flush()
+        except OSError:
+            pass
 
 
 __all__ = ["ChatRunner"]
