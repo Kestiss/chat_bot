@@ -48,6 +48,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument("delay", nargs="?", type=float, default=1.2)
     parser.add_argument("typing_speed", nargs="?", type=float, default=0.015)
     parser.add_argument("context_limit", nargs="?", type=int, default=6)
+    parser.add_argument("temperature", nargs="?", type=float, default=0.3)
     return parser.parse_args(argv)
 
 
@@ -109,6 +110,7 @@ def chat_turn(
     model: str,
     api_key: str,
     context_limit: int,
+    temperature: float,
 ) -> str:
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     context = conversation[-context_limit:]
@@ -116,7 +118,7 @@ def chat_turn(
     if context and context[-1]["role"] == "assistant":
         context.append({"role": "user", "content": context[-1]["content"]})
 
-    body = {"model": model, "messages": context, "temperature": 0.7}
+    body = {"model": model, "messages": context, "temperature": temperature}
 
     response = requests.post(GROQ_ENDPOINT, headers=headers, json=body)
     response.raise_for_status()
@@ -151,6 +153,7 @@ def main(argv: List[str] | None = None) -> None:
                 args.model,
                 GROQ_API_KEYS[current_bot],
                 max(args.context_limit, 1),
+                args.temperature,
             )
             type_text(reply, bot_label, args.typing_speed)
             print(GREEN + "─" * LCD_WIDTH + RESET)

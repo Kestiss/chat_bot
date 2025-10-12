@@ -97,6 +97,7 @@ class ChatRunner:
             str(chat_config["delay"]),
             str(chat_config["typing_speed"]),
             str(chat_config["context_limit"]),
+            str(chat_config.get("temperature", 0.3)),
         ]
 
     def _stream_output(self, process: subprocess.Popen[str]) -> None:

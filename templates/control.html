@@ -76,6 +76,11 @@
                     <input id="typing_speed" type="number" step="0.001" name="typing_speed" value="{{ config.typing_speed }}">
                 </div>
             </div>
+            <div class="form__field">
+                <label for="temperature" class="form__label">🔥 Temperature</label>
+                <input id="temperature" type="number" step="0.05" min="0" max="2" name="temperature" value="{{ config.temperature }}">
+                <span class="help">Lower values make responses more concise.</span>
+            </div>
             <div class="grid grid--two">
                 <div class="form__field">
                     <label class="form__label">🕒 Start Time</label>
