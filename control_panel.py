@@ -72,6 +72,16 @@ def _request_topic_from_uselessfacts() -> str | None:
     return text
 
 
+def _apply_new_topic(topic: str, *, persist: bool = True) -> None:
+    control_config["topic"] = topic
+    if not persist:
+        return
+    try:
+        _write_env_updates({"CHAT_DEFAULT_TOPIC": topic})
+    except Exception:
+        logging.warning("Failed to persist generated topic to .env", exc_info=True)
+
+
 def _update_config_from_form(form_data: Dict[str, str]) -> List[str]:
     warnings: List[str] = []
     for key in control_config:
@@ -214,17 +224,20 @@ def logs() -> Any:
 def topics() -> Any:
     topic = _request_topic_from_uselessfacts()
     if topic:
-        control_config["topic"] = topic
-        try:
-            _write_env_updates({"CHAT_DEFAULT_TOPIC": topic})
-        except Exception:
-            logging.warning("Failed to persist generated topic to .env", exc_info=True)
+        _apply_new_topic(topic)
         return jsonify({"topic": topic, "source": "uselessfacts"})
 
     return jsonify({"error": "Unable to generate topic"}), 503
 
 
 def run() -> None:
+    startup_topic = _request_topic_from_uselessfacts()
+    if startup_topic:
+        _apply_new_topic(startup_topic)
+        logging.info("Initialized conversation topic with startup fact.")
+    else:
+        logging.warning("Unable to fetch startup topic; using existing default.")
+
     chat_scheduler.start()
     local_ip = _get_local_ip()
     # Provide a handy reminder about how to reach the panel once the server starts.

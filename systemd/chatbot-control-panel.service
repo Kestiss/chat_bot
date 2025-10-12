@@ -1,0 +1,16 @@
+[Unit]
+Description=Chat Bot Control Panel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/chat_bot
+EnvironmentFile=/home/pi/chat_bot/.env
+ExecStart=/usr/bin/python3 /home/pi/chat_bot/control_panel.py
+Restart=on-failure
+RestartSec=5
+User=pi
+
+[Install]
+WantedBy=multi-user.target
