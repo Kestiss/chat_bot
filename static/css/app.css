@@ -225,12 +225,14 @@ input[type="number"] {
     line-height: 1.45;
     max-height: clamp(220px, 45vh, 420px);
     overflow-y: auto;
+    overflow-x: hidden;
     display: grid;
     gap: 6px;
 }
 
 .chat-feed div {
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .chat-feed__placeholder {
