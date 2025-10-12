@@ -20,7 +20,7 @@ def _load_dotenv(path: str = ".env") -> None:
         key, value = line.split("=", 1)
         key = key.strip()
         value = value.strip()
-        if key and key not in os.environ:
+        if key:
             os.environ[key] = value
 
 
@@ -90,10 +90,10 @@ def load_control_defaults() -> Dict[str, Any]:
         "typing_speed": _DEFAULT_TYPING_SPEED,
         "context_limit": _DEFAULT_CONTEXT_LIMIT,
         "temperature": _DEFAULT_TEMPERATURE,
-        "start_hour": _parse_optional_int(_DEFAULT_START_HOUR) or 14,
-        "start_minute": _parse_optional_int(_DEFAULT_START_MINUTE) or 54,
-        "stop_hour": _parse_optional_int(_DEFAULT_STOP_HOUR) or 14,
-        "stop_minute": _parse_optional_int(_DEFAULT_STOP_MINUTE) or 58,
+        "start_hour": _parse_optional_int(_DEFAULT_START_HOUR),
+        "start_minute": _parse_optional_int(_DEFAULT_START_MINUTE),
+        "stop_hour": _parse_optional_int(_DEFAULT_STOP_HOUR),
+        "stop_minute": _parse_optional_int(_DEFAULT_STOP_MINUTE),
     }
 
 
