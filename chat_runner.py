@@ -64,11 +64,24 @@ class ChatRunner:
             return True
 
     def stop(self) -> bool:
+        proc: Optional[subprocess.Popen[str]]
         with self._lock:
-            if not self._process or not self.is_running():
+            proc = self._process
+            if not proc or proc.poll() is not None:
                 return False
-            self._process.terminate()
-            return True
+            proc.terminate()
+        if proc is None:
+            return False
+
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        finally:
+            with self._lock:
+                if self._process is proc:
+                    self._process = None
+        return True
 
     def restart(self, chat_config: Dict[str, Any]) -> None:
         self.stop()

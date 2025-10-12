@@ -122,8 +122,7 @@ def chat_turn(
 
     response = requests.post(GROQ_ENDPOINT, headers=headers, json=body)
     if not response.ok:
-      print(f"[Groq error] {response.status_code}: {response.text}")
-      response.raise_for_status()
+        print(f"[Groq error] {response.status_code}: {response.text}")
     response.raise_for_status()
     reply = response.json()["choices"][0]["message"]
     reply_content = reply.get("content", "").strip() or "(no response)"
