@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Chat Control Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="page page--login">
+    <main class="panel panel--login">
+        <header class="panel__header">
+            <h1>AI Chat Control</h1>
+            <p>Please authenticate</p>
+        </header>
+        {% if error %}
+        <div class="alert alert--error">{{ error }}</div>
+        {% endif %}
+        <form method="POST" class="form">
+            <input type="hidden" name="action" value="login">
+            <label class="form__field" for="username">
+                <span class="form__label">Username</span>
+                <input id="username" name="username" autocomplete="username" required>
+            </label>
+            <label class="form__field" for="password">
+                <span class="form__label">Password</span>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+            </label>
+            <button type="submit" class="button button--accent">Login</button>
+        </form>
+        <footer class="panel__footer">
+            <span>®WHJ</span>
+        </footer>
+    </main>
+</body>
+</html>

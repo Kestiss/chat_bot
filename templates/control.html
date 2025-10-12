@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Chat Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="page page--control">
+    <main class="panel panel--control">
+        <header class="panel__header">
+            <h1>AI Chat Control</h1>
+            <p>Manage and schedule the Raspberry Pi chat loop from any device.</p>
+        </header>
+        <section class="status">
+            <strong>{{ '✅ Running' if running else '⏹ Idle' }}</strong>
+            <span>{{ status_message }}</span>
+        </section>
+        <section class="chat-log">
+            <div class="chat-log__header">
+                <h2>Live Conversation</h2>
+                <span>Updates every 3 seconds</span>
+            </div>
+            <div class="chat-feed" id="chat-feed">
+                {% if log_lines %}
+                    {% for line in log_lines %}
+                        <div>{{ line }}</div>
+                    {% endfor %}
+                {% else %}
+                    <div class="chat-feed__placeholder">Waiting for chat output...</div>
+                {% endif %}
+            </div>
+        </section>
+        <form method="POST" class="form">
+            <div class="form__field">
+                <label for="topic" class="form__label">💬 Topic</label>
+                <input id="topic" type="text" name="topic" value="{{ config.topic }}" placeholder="Conversation starter">
+            </div>
+            <div class="grid grid--two">
+                <div class="form__field">
+                    <label for="first_speaker" class="form__label">🎙 First Speaker</label>
+                    <select id="first_speaker" name="first_speaker">
+                        <option value="bot1" {{ 'selected' if config.first_speaker == 'bot1' else '' }}>Bot 1</option>
+                        <option value="bot2" {{ 'selected' if config.first_speaker == 'bot2' else '' }}>Bot 2</option>
+                    </select>
+                </div>
+                <div class="form__field">
+                    <label for="model" class="form__label">🧠 Model</label>
+                    <select id="model" name="model">
+                        <option value="gemma2-9b-it" {{ 'selected' if config.model == 'gemma2-9b-it' else '' }}>gemma2-9b-it</option>
+                        <option value="llama-3.1-8b-instant" {{ 'selected' if config.model == 'llama-3.1-8b-instant' else '' }}>llama-3.1-8b-instant</option>
+                        <option value="meta-llama/llama-4-scout-17b-16e-instruct" {{ 'selected' if config.model == 'meta-llama/llama-4-scout-17b-16e-instruct' else '' }}>meta-llama/llama-4-scout-17b-16e-instruct</option>
+                        <option value="llama3-8b-8192" {{ 'selected' if config.model == 'llama3-8b-8192' else '' }}>llama3-8b-8192</option>
+                        <option value="allam-2-7b" {{ 'selected' if config.model == 'allam-2-7b' else '' }}>allam-2-7b</option>
+                        <option value="llama3-70b-8192" {{ 'selected' if config.model == 'llama3-70b-8192' else '' }}>llama3-70b-8192</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid--two">
+                <div class="form__field">
+                    <label for="max_turns" class="form__label">🔁 Max Turns (0 = unlimited)</label>
+                    <input id="max_turns" type="number" name="max_turns" value="{{ config.max_turns }}">
+                </div>
+                <div class="form__field">
+                    <label for="context_limit" class="form__label">🧠 Context Limit</label>
+                    <input id="context_limit" type="number" name="context_limit" value="{{ config.context_limit }}">
+                </div>
+            </div>
+            <div class="grid grid--two">
+                <div class="form__field">
+                    <label for="delay" class="form__label">⏱ Delay Between Turns (s)</label>
+                    <input id="delay" type="number" step="0.1" name="delay" value="{{ config.delay }}">
+                </div>
+                <div class="form__field">
+                    <label for="typing_speed" class="form__label">⌨️ Typing Speed (s/char)</label>
+                    <input id="typing_speed" type="number" step="0.001" name="typing_speed" value="{{ config.typing_speed }}">
+                </div>
+            </div>
+            <div class="grid grid--two">
+                <div class="form__field">
+                    <label class="form__label">🕒 Start Time</label>
+                    <div class="grid grid--two">
+                        <input type="number" name="start_hour" min="0" max="23" value="{{ '' if config.start_hour is none else config.start_hour }}" placeholder="HH">
+                        <input type="number" name="start_minute" min="0" max="59" value="{{ '' if config.start_minute is none else config.start_minute }}" placeholder="MM">
+                    </div>
+                    <span class="help">Leave blank to disable scheduling.</span>
+                </div>
+                <div class="form__field">
+                    <label class="form__label">🕔 Stop Time</label>
+                    <div class="grid grid--two">
+                        <input type="number" name="stop_hour" min="0" max="23" value="{{ '' if config.stop_hour is none else config.stop_hour }}" placeholder="HH">
+                        <input type="number" name="stop_minute" min="0" max="59" value="{{ '' if config.stop_minute is none else config.stop_minute }}" placeholder="MM">
+                    </div>
+                    <span class="help">Leave blank to disable scheduling.</span>
+                </div>
+            </div>
+            <div class="grid grid--buttons">
+                <button name="action" value="start" class="button button--accent">▶️ Start</button>
+                <button name="action" value="stop" class="button button--stop">⏹ Stop</button>
+                <button name="action" value="restart" class="button button--warn">🔁 Restart</button>
+                <button name="action" value="save" class="button button--accent">💾 Save</button>
+                <button name="action" value="logout" class="button button--neutral">🚪 Logout</button>
+            </div>
+        </form>
+        <section class="stats">
+            <h2>Current Snapshot</h2>
+            <ul>
+                {% for key, value in config.items() %}
+                <li><span>{{ key.replace('_', ' ').title() }}</span><strong>{{ value }}</strong></li>
+                {% endfor %}
+                <li><span>Running</span><strong>{{ 'Yes' if running else 'No' }}</strong></li>
+                <li><span>Schedule Enabled</span><strong>{{ 'Yes' if schedule_enabled else 'No' }}</strong></li>
+            </ul>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/feed.js') }}" defer></script>
+</body>
+</html>
