@@ -57,7 +57,7 @@ LOG_MAX_LINES = int(_get_env("CHAT_LOG_MAX_LINES", "200"))
 
 # === Default conversation / scheduler settings ===
 _DEFAULT_TOPIC = _get_env("CHAT_DEFAULT_TOPIC", "Who are you?")
-_DEFAULT_MODEL = _get_env("CHAT_DEFAULT_MODEL", "gemma2-9b-it")
+_DEFAULT_MODEL = _get_env("CHAT_DEFAULT_MODEL", "groq/compound-mini")
 _DEFAULT_FIRST_SPEAKER = _get_env("CHAT_DEFAULT_FIRST", "bot1")
 _DEFAULT_MAX_TURNS = int(_get_env("CHAT_DEFAULT_MAX_TURNS", "0"))
 _DEFAULT_DELAY = float(_get_env("CHAT_DEFAULT_DELAY", "20"))
