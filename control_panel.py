@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import socket
 import requests
 from pathlib import Path
 from typing import Any, Dict, List
@@ -34,6 +35,15 @@ chat_scheduler = ChatScheduler(chat_runner, control_config)
 is_authenticated = False
 
 USELESS_FACTS_ENDPOINT = "https://uselessfacts.jsph.pl/api/v2/facts/random"
+
+
+def _get_local_ip() -> str:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(("8.8.8.8", 80))
+            return sock.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
 
 
 def _request_topic_from_uselessfacts() -> str | None:
@@ -216,6 +226,12 @@ def topics() -> Any:
 
 def run() -> None:
     chat_scheduler.start()
+    local_ip = _get_local_ip()
+    # Provide a handy reminder about how to reach the panel once the server starts.
+    print(
+        "Control panel available at http://localhost:5000 "
+        f"(use http://{local_ip}:5000 from another device)."
+    )
     app.run(host="0.0.0.0", port=5000)
 
 
