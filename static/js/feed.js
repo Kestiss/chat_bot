@@ -1,4 +1,7 @@
 const chatFeed = document.getElementById('chat-feed');
+const topicRefreshButton = document.getElementById('topic-refresh');
+const topicInput = document.getElementById('topic');
+const defaultTopicPlaceholder = topicInput ? topicInput.getAttribute('placeholder') || '' : '';
 
 async function refreshChat() {
     if (!chatFeed) {
@@ -45,4 +48,51 @@ async function refreshChat() {
 if (chatFeed) {
     refreshChat();
     setInterval(refreshChat, 3000);
+}
+
+async function populateRandomTopic() {
+    if (!topicInput || !topicRefreshButton) {
+        return;
+    }
+    const previousValue = topicInput.value;
+    topicInput.disabled = true;
+    topicRefreshButton.disabled = true;
+    try {
+        const response = await fetch('/topics', { cache: 'no-store' });
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            data = null;
+        }
+        if (!response.ok) {
+            const errorMessage =
+                data && typeof data.error === 'string' ? data.error : 'Unable to generate topic';
+            if (!previousValue) {
+                topicInput.placeholder = errorMessage;
+            }
+            return;
+        }
+        if (data && typeof data.topic === 'string') {
+            const candidate = data.topic.trim();
+            if (candidate) {
+                topicInput.value = candidate;
+                topicInput.placeholder = defaultTopicPlaceholder;
+            }
+        }
+    } catch (error) {
+        if (!previousValue) {
+            topicInput.placeholder = 'Unable to generate topic';
+        }
+    } finally {
+        topicInput.disabled = false;
+        topicRefreshButton.disabled = false;
+        topicInput.focus();
+    }
+}
+
+if (topicRefreshButton) {
+    topicRefreshButton.addEventListener('click', () => {
+        populateRandomTopic();
+    });
 }

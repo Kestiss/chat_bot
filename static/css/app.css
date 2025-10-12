@@ -116,6 +116,21 @@ body.page--login {
     gap: 8px;
 }
 
+.topic-input {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.topic-input input {
+    flex: 1 1 auto;
+}
+
+.topic-refresh {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
 .form__label {
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -176,6 +191,13 @@ input[type="number"] {
 .button:hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 16px rgba(56, 189, 248, 0.35);
+}
+
+.button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .button--stop {

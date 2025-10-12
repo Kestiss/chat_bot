@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import random
+import requests
+import textwrap
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -9,6 +12,8 @@ from chat_runner import ChatRunner
 from config import (
     ADMIN_PASSWORD,
     ADMIN_USERNAME,
+    GROQ_API_KEYS,
+    GROQ_ENDPOINT,
     LOG_MAX_LINES,
     load_control_defaults,
 )
@@ -27,6 +32,84 @@ control_config: Dict[str, Any] = load_control_defaults()
 chat_runner = ChatRunner(log_buffer)
 chat_scheduler = ChatScheduler(chat_runner, control_config)
 is_authenticated = False
+
+TOPIC_VIBES: List[str] = [
+    "playfully dramatic reality-TV confessionals",
+    "snarky brunch-table banter",
+    "cheeky late-night talk show monologue",
+    "mischievous office gossip",
+    "irreverent stand-up comedy riff",
+    "sly best-friend shade throwing",
+    "sarcastic influencer hot take",
+    "witty celebrity roast segment",
+    "bold coffee-shop debate",
+    "unapologetic group chat chaos",
+]
+
+TOPIC_SPARKS: List[str] = [
+    "outrageously niche hobbies going mainstream",
+    "petty tech frustrations everyone secretly has",
+    "luxury habits during budget living",
+    "unexpected power moves in everyday life",
+    "dramatic overreactions to minor inconveniences",
+    "secret flexes buried in casual conversations",
+    "the guilty pleasures people pretend to hate",
+    "ridiculous office politics nobody admits to",
+    "social etiquette rules ripe for rebellion",
+    "wild predictions about near-future trends",
+    "the most extra way to celebrate small wins",
+    "micro-dramas in group trips",
+    "spicy hot takes on personal productivity",
+    "unhinged food combinations people won’t stop defending",
+    "chaotic confessions from digital life",
+]
+
+def _pick_groq_key() -> str | None:
+    keys = [key for key in GROQ_API_KEYS.values() if key]
+    if not keys:
+        return None
+    return random.choice(keys)
+
+
+def _request_topic_from_groq() -> str | None:
+    api_key = _pick_groq_key()
+    if not api_key:
+        return None
+
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    vibe = random.choice(TOPIC_VIBES)
+    spark = random.choice(TOPIC_SPARKS)
+    prompt = textwrap.dedent(
+        """
+        You are a witty, sassy conversation designer.
+        Produce exactly one playful conversation topic as a single sentence.
+        Keep it clever but friendly; no numbering or bullet points. Max 10 words.
+        Avoid reusing the same idea twice; add a fresh twist every time.
+        """
+    ).strip()
+    user_instruction = (
+        f"Spark a lively debate about {spark}. Deliver it with the vibe of {vibe}. "
+        "Keep it bold, clever, and single-sentence."
+    )
+    topic_temperature = max(0.7, min(1.2, control_config.get("temperature", 0.3) + 0.4))
+    body = {
+        "model": control_config["model"],
+        "messages": [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": user_instruction},
+        ],
+        "max_tokens": 120,
+        "temperature": topic_temperature,
+    }
+
+    try:
+        response = requests.post(GROQ_ENDPOINT, headers=headers, json=body, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        content = data["choices"][0]["message"].get("content", "").strip()
+        return content or None
+    except Exception:
+        return None
 
 
 def _update_config_from_form(form_data: Dict[str, str]) -> List[str]:
@@ -75,12 +158,13 @@ def _write_env_updates(updates: Dict[str, str]) -> None:
     ENV_FILE.write_text("\n".join(new_lines) + ("\n" if new_lines else ""))
 
 
-def _persist_schedule_settings() -> None:
+def _persist_env_settings() -> None:
     updates = {
         "CHAT_DEFAULT_START_HOUR": "" if control_config.get("start_hour") is None else str(control_config["start_hour"]),
         "CHAT_DEFAULT_START_MINUTE": "" if control_config.get("start_minute") is None else str(control_config["start_minute"]),
         "CHAT_DEFAULT_STOP_HOUR": "" if control_config.get("stop_hour") is None else str(control_config["stop_hour"]),
         "CHAT_DEFAULT_STOP_MINUTE": "" if control_config.get("stop_minute") is None else str(control_config["stop_minute"]),
+        "CHAT_DEFAULT_MODEL": control_config.get("model", ""),
     }
     _write_env_updates(updates)
 
@@ -112,6 +196,8 @@ def control() -> str:
         message_segments.extend(_update_config_from_form(request.form))
         action = request.form.get("action")
 
+        persist_env = action in {"save", "start", "restart", "stop"}
+
         if action == "save":
             message_segments.append("✅ Settings saved.")
 
@@ -131,9 +217,9 @@ def control() -> str:
             chat_runner.restart(control_config)
             message_segments.append("🔁 Chat restarted.")
 
-        if action in {"save", "start", "restart", "stop"}:
+        if persist_env:
             try:
-                _persist_schedule_settings()
+                _persist_env_settings()
             except Exception:
                 message_segments.append("⚠️ Failed to persist schedule to .env.")
 
@@ -161,6 +247,15 @@ def control() -> str:
 @app.route("/logs")
 def logs() -> Any:
     return jsonify({"lines": log_buffer.snapshot()})
+
+
+@app.route("/topics")
+def topics() -> Any:
+    topic = _request_topic_from_groq()
+    if topic:
+        return jsonify({"topic": topic, "source": "groq"})
+
+    return jsonify({"error": "Unable to generate topic"}), 503
 
 
 def run() -> None:

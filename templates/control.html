@@ -34,7 +34,10 @@
         <form method="POST" class="form">
             <div class="form__field">
                 <label for="topic" class="form__label">💬 Topic</label>
-                <input id="topic" type="text" name="topic" value="{{ config.topic }}" placeholder="Conversation starter">
+                <div class="topic-input">
+                    <input id="topic" type="text" name="topic" value="{{ config.topic }}" placeholder="Conversation starter" autocomplete="off">
+                    <button type="button" class="button button--neutral topic-refresh" id="topic-refresh">🎲 Generate</button>
+                </div>
             </div>
             <div class="grid grid--two">
                 <div class="form__field">
