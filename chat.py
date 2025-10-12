@@ -43,7 +43,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Groq chat loop between two bots.")
     parser.add_argument("topic", nargs="?", default="Default topic")
     parser.add_argument("first_speaker", nargs="?", default="bot1")
-    parser.add_argument("model", nargs="?", default="gemma2-9b-it")
+    parser.add_argument("model", nargs="?", default="groq/compound-mini")
     parser.add_argument("max_turns", nargs="?", type=int, default=10)
     parser.add_argument("delay", nargs="?", type=float, default=1.2)
     parser.add_argument("typing_speed", nargs="?", type=float, default=0.015)
