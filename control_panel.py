@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import random
 import requests
 import textwrap
@@ -24,6 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent
 app = Flask(
     __name__, template_folder=str(BASE_DIR / "templates"), static_folder=str(BASE_DIR / "static")
 )
+
+# Keep request logs quiet unless something problematic happens.
+logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 ENV_FILE = BASE_DIR / ".env"
 
