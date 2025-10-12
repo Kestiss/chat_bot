@@ -63,7 +63,7 @@ sudo dpkg-reconfigure console-setup
 ## 7. Enable Auto-Start (systemd)
 To have the control panel launch whenever the Raspberry Pi boots, install the systemd unit provided in `systemd/chatbot-control-panel.service`.
 
-1. Edit the unit file so `WorkingDirectory`, `EnvironmentFile`, `ExecStart`, and `User` match your setup (the defaults assume the repository lives at `/home/pi/chat_bot` and runs as the `pi` user).
+1. Edit the unit file so `WorkingDirectory`, `EnvironmentFile`, `ExecStart`, and `User` match your setup (the committed version assumes the repo lives at `/home/rasp/chat_bot` and runs as the `rasp` user—adjust if yours differs).
 2. Copy the unit into place and reload systemd:
    ```bash
    sudo cp systemd/chatbot-control-panel.service /etc/systemd/system/chatbot-control-panel.service
@@ -74,11 +74,13 @@ To have the control panel launch whenever the Raspberry Pi boots, install the sy
    sudo systemctl enable chatbot-control-panel.service
    sudo systemctl start chatbot-control-panel.service
    ```
-4. Check the status or logs if you need to troubleshoot:
+4. Check the status or logs if you need to troubleshoot (use `-f` to follow logs live):
    ```bash
    sudo systemctl status chatbot-control-panel.service
-   journalctl -u chatbot-control-panel.service -f
+   sudo journalctl -u chatbot-control-panel.service
+   sudo journalctl -u chatbot-control-panel.service -f
    ```
+5. Make sure the `.env` file referenced by `EnvironmentFile=` exists (even an empty file is fine) so the service can load its environment variables.
 
 ## Local Development Notes
 Create and activate a virtual environment, then install the Flask and Requests dependencies before running the control panel locally:

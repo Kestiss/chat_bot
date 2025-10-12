@@ -5,12 +5,12 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi/chat_bot
-EnvironmentFile=/home/pi/chat_bot/.env
-ExecStart=/usr/bin/python3 /home/pi/chat_bot/control_panel.py
+WorkingDirectory=/home/rasp/chat_bot
+EnvironmentFile=/home/rasp/chat_bot/.env
+ExecStart=/usr/bin/python3 /home/rasp/chat_bot/control_panel.py
 Restart=on-failure
 RestartSec=5
-User=pi
+User=rasp
 
 [Install]
 WantedBy=multi-user.target
