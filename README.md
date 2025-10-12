@@ -59,3 +59,13 @@ sudo dpkg-reconfigure console-setup
   ```bash
   python3 control_panel.py
   ```
+
+## Local Development Notes
+Create and activate a virtual environment, then install the Flask and Requests dependencies before running the control panel locally:
+
+```bash
+cd ~/chat_bot
+python3 -m venv .venv
+source .venv/bin/activate
+pip install flask requests
+```
