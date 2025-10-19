@@ -90,4 +90,5 @@ cd ~/chat_bot
 python3 -m venv .venv
 source .venv/bin/activate
 pip install flask requests
+python3 control_panel.py
 ```

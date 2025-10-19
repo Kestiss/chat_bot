@@ -113,10 +113,14 @@ def chat_turn(
     temperature: float,
 ) -> str:
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    context = conversation[-context_limit:]
+    if conversation and conversation[-1]["role"] == "assistant":
+        conversation.append({"role": "user", "content": conversation[-1]["content"]})
 
-    if context and context[-1]["role"] == "assistant":
-        context.append({"role": "user", "content": context[-1]["content"]})
+    system_prompt = next((msg for msg in reversed(conversation) if msg["role"] == "system"), None)
+    recent_non_system = [msg for msg in conversation if msg["role"] != "system"]
+    context = recent_non_system[-context_limit:]
+    if system_prompt:
+        context = [system_prompt, *context]
 
     body = {"model": model, "messages": context, "temperature": temperature}
 
