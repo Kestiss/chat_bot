@@ -88,7 +88,7 @@ def _update_config_from_form(form_data: Dict[str, str]) -> List[str]:
         if key in form_data:
             raw_value = form_data[key]
             try:
-                if key in {"max_turns", "context_limit"}:
+                if key in {"max_turns", "context_limit", "max_completion_tokens"}:
                     control_config[key] = int(raw_value)
                 elif key in {"delay", "typing_speed", "temperature"}:
                     control_config[key] = float(raw_value)

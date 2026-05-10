@@ -10,7 +10,10 @@ import sys
 import threading
 from typing import Dict, Any, Optional
 
+from config import load_control_defaults
 from log_buffer import LogBuffer
+
+_CHAT_DEFAULTS = load_control_defaults()
 
 ANSI_RE = re.compile(r"\x1B(?:\[[0-?]*[ -/]*[@-~]|c)")
 
@@ -112,6 +115,12 @@ class ChatRunner:
             str(chat_config["typing_speed"]),
             str(chat_config["context_limit"]),
             str(chat_config.get("temperature", 0.3)),
+            str(
+                chat_config.get(
+                    "max_completion_tokens",
+                    _CHAT_DEFAULTS["max_completion_tokens"],
+                )
+            ),
         ]
 
     def _stream_output(self, process: subprocess.Popen[str]) -> None:

@@ -64,6 +64,7 @@ _DEFAULT_DELAY = float(_get_env("CHAT_DEFAULT_DELAY", "20"))
 _DEFAULT_TYPING_SPEED = float(_get_env("CHAT_DEFAULT_TYPING_SPEED", "0.01"))
 _DEFAULT_CONTEXT_LIMIT = int(_get_env("CHAT_DEFAULT_CONTEXT", "6"))
 _DEFAULT_TEMPERATURE = float(_get_env("CHAT_DEFAULT_TEMPERATURE", "0.3"))
+_DEFAULT_MAX_COMPLETION_TOKENS = int(_get_env("CHAT_DEFAULT_MAX_COMPLETION_TOKENS", "256"))
 _DEFAULT_START_HOUR = _get_env("CHAT_DEFAULT_START_HOUR")
 _DEFAULT_START_MINUTE = _get_env("CHAT_DEFAULT_START_MINUTE")
 _DEFAULT_STOP_HOUR = _get_env("CHAT_DEFAULT_STOP_HOUR")
@@ -90,6 +91,7 @@ def load_control_defaults() -> Dict[str, Any]:
         "typing_speed": _DEFAULT_TYPING_SPEED,
         "context_limit": _DEFAULT_CONTEXT_LIMIT,
         "temperature": _DEFAULT_TEMPERATURE,
+        "max_completion_tokens": _DEFAULT_MAX_COMPLETION_TOKENS,
         "start_hour": _parse_optional_int(_DEFAULT_START_HOUR),
         "start_minute": _parse_optional_int(_DEFAULT_START_MINUTE),
         "stop_hour": _parse_optional_int(_DEFAULT_STOP_HOUR),

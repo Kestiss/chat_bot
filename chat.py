@@ -10,7 +10,7 @@ from typing import Dict, List
 
 import requests
 
-from config import LCD_WIDTH, GROQ_API_KEYS, GROQ_ENDPOINT
+from config import GROQ_API_KEYS, GROQ_ENDPOINT, LCD_WIDTH, load_control_defaults
 
 GREEN = "\033[92m"
 RESET = "\033[0m"
@@ -49,6 +49,13 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     parser.add_argument("typing_speed", nargs="?", type=float, default=0.015)
     parser.add_argument("context_limit", nargs="?", type=int, default=6)
     parser.add_argument("temperature", nargs="?", type=float, default=0.3)
+    parser.add_argument(
+        "max_completion_tokens",
+        nargs="?",
+        type=int,
+        default=load_control_defaults()["max_completion_tokens"],
+        help="Cap each reply (Groq max_completion_tokens); 0 = omit limit.",
+    )
     return parser.parse_args(argv)
 
 
@@ -111,6 +118,7 @@ def chat_turn(
     api_key: str,
     context_limit: int,
     temperature: float,
+    max_completion_tokens: int,
 ) -> str:
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     if conversation and conversation[-1]["role"] == "assistant":
@@ -122,7 +130,9 @@ def chat_turn(
     if system_prompt:
         context = [system_prompt, *context]
 
-    body = {"model": model, "messages": context, "temperature": temperature}
+    body: Dict[str, object] = {"model": model, "messages": context, "temperature": temperature}
+    if max_completion_tokens > 0:
+        body["max_completion_tokens"] = max_completion_tokens
 
     response = requests.post(GROQ_ENDPOINT, headers=headers, json=body)
     if not response.ok:
@@ -160,6 +170,7 @@ def main(argv: List[str] | None = None) -> None:
                 GROQ_API_KEYS[current_bot],
                 max(args.context_limit, 1),
                 args.temperature,
+                max(args.max_completion_tokens, 0),
             )
             type_text(reply, bot_label, args.typing_speed)
             print(GREEN + "─" * LCD_WIDTH + RESET)
