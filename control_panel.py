@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import socket
 import requests
@@ -27,6 +28,14 @@ app = Flask(
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 ENV_FILE = BASE_DIR / ".env"
+MODELS_FILE = BASE_DIR / "models.json"
+DEFAULT_MODELS = [
+    "groq/compound-mini",
+    "groq/compound",
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b",
+]
 
 log_buffer = LogBuffer(LOG_MAX_LINES)
 control_config: Dict[str, Any] = load_control_defaults()
@@ -70,6 +79,72 @@ def _request_topic_from_uselessfacts() -> str | None:
         return None
 
     return text
+
+
+def _load_model_options() -> List[str]:
+    if not MODELS_FILE.exists():
+        _save_model_options(DEFAULT_MODELS)
+        return DEFAULT_MODELS.copy()
+
+    try:
+        raw_models = json.loads(MODELS_FILE.read_text())
+    except Exception:
+        logging.warning("Failed to read models.json; using default model list.", exc_info=True)
+        return DEFAULT_MODELS.copy()
+
+    if not isinstance(raw_models, list):
+        return DEFAULT_MODELS.copy()
+
+    models: List[str] = []
+    for raw_model in raw_models:
+        if isinstance(raw_model, str):
+            model = raw_model.strip()
+        elif isinstance(raw_model, dict) and isinstance(raw_model.get("id"), str):
+            model = raw_model["id"].strip()
+        else:
+            continue
+        if model and model not in models:
+            models.append(model)
+
+    return models or DEFAULT_MODELS.copy()
+
+
+def _save_model_options(models: List[str]) -> None:
+    MODELS_FILE.write_text(json.dumps(models, indent=2) + "\n")
+
+
+def _add_model_option(model: str) -> str:
+    model = model.strip()
+    if not model:
+        return "Model ID cannot be empty."
+    if any(character.isspace() for character in model):
+        return "Model ID cannot contain spaces."
+
+    models = _load_model_options()
+    if model in models:
+        return f"{model} is already in the model list."
+
+    models.append(model)
+    _save_model_options(models)
+    return f"Added model {model}."
+
+
+def _remove_model_option(model: str) -> str:
+    model = model.strip()
+    models = _load_model_options()
+    if model not in models:
+        return f"{model} is not in the model list."
+
+    models.remove(model)
+    if not models:
+        return "Cannot remove the last model."
+
+    _save_model_options(models)
+    if control_config.get("model") == model:
+        control_config["model"] = models[0]
+        return f"Removed model {model}. Selected {models[0]} instead."
+
+    return f"Removed model {model}."
 
 
 def _apply_new_topic(topic: str, *, persist: bool = True) -> None:
@@ -167,10 +242,16 @@ def control() -> str:
         message_segments.extend(_update_config_from_form(request.form))
         action = request.form.get("action")
 
-        persist_env = action in {"save", "start", "restart", "stop"}
+        persist_env = action in {"save", "start", "restart", "stop", "remove_model"}
 
         if action == "save":
             message_segments.append("✅ Settings saved.")
+
+        elif action == "add_model":
+            message_segments.append(_add_model_option(request.form.get("new_model_id", "")))
+
+        elif action == "remove_model":
+            message_segments.append(_remove_model_option(request.form.get("remove_model_id", "")))
 
         elif action == "start":
             if chat_runner.start(control_config):
@@ -204,10 +285,14 @@ def control() -> str:
 
     log_lines = log_buffer.snapshot()
     status_message = " ".join(message_segments) if message_segments else "Ready for commands."
+    models = _load_model_options()
+    if control_config.get("model") not in models:
+        models = [control_config["model"], *models]
 
     return render_template(
         "control.html",
         config=control_config,
+        models=models,
         running=running,
         schedule_enabled=schedule_enabled,
         status_message=status_message,

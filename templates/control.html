@@ -50,11 +50,9 @@
                 <div class="form__field">
                     <label for="model" class="form__label">🧠 Model</label>
                     <select id="model" name="model">
-                        <option value="groq/compound-mini" {{ 'selected' if config.model == 'groq/compound-mini' else '' }}>groq/compound-mini</option>
-                        <option value="groq/compound" {{ 'selected' if config.model == 'groq/compound' else '' }}>groq/compound</option>
-                        <option value="openai/gpt-oss-20b" {{ 'selected' if config.model == 'openai/gpt-oss-20b' else '' }}>openai/gpt-oss-20b</option>
-                        <option value="openai/gpt-oss-120b" {{ 'selected' if config.model == 'openai/gpt-oss-120b' else '' }}>openai/gpt-oss-120b</option>
-                        <option value="qwen/qwen3.8-27b" {{ 'selected' if config.model == 'qwen/qwen3.8-27b' else '' }}>qwen/qwen3.8-27b</option>
+                        {% for model in models %}
+                        <option value="{{ model }}" {{ 'selected' if config.model == model else '' }}>{{ model }}</option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -116,6 +114,25 @@
                 <button name="action" value="logout" class="button button--neutral">🚪 Logout</button>
             </div>
         </form>
+        <section class="model-manager">
+            <div class="model-manager__header">
+                <h2>Model List</h2>
+                <span>Manual Groq model IDs</span>
+            </div>
+            <form method="POST" class="model-manager__add">
+                <input type="text" name="new_model_id" placeholder="provider/model-id" autocomplete="off">
+                <button name="action" value="add_model" class="button button--accent">Add</button>
+            </form>
+            <div class="model-manager__list">
+                {% for model in models %}
+                <form method="POST" class="model-row">
+                    <span>{{ model }}</span>
+                    <input type="hidden" name="remove_model_id" value="{{ model }}">
+                    <button name="action" value="remove_model" class="button button--neutral" {{ 'disabled' if models|length <= 1 else '' }}>Remove</button>
+                </form>
+                {% endfor %}
+            </div>
+        </section>
         <section class="stats">
             <h2>Current Snapshot</h2>
             <ul>
