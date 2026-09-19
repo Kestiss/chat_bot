@@ -51,11 +51,10 @@
                     <label for="model" class="form__label">🧠 Model</label>
                     <select id="model" name="model">
                         <option value="groq/compound-mini" {{ 'selected' if config.model == 'groq/compound-mini' else '' }}>groq/compound-mini</option>
-                        <option value="llama-3.1-8b-instant" {{ 'selected' if config.model == 'llama-3.1-8b-instant' else '' }}>llama-3.1-8b-instant</option>
-                        <option value="meta-llama/llama-4-scout-17b-16e-instruct" {{ 'selected' if config.model == 'meta-llama/llama-4-scout-17b-16e-instruct' else '' }}>meta-llama/llama-4-scout-17b-16e-instruct</option>
-                        <option value="llama3-8b-8192" {{ 'selected' if config.model == 'llama3-8b-8192' else '' }}>llama3-8b-8192</option>
-                        <option value="allam-2-7b" {{ 'selected' if config.model == 'allam-2-7b' else '' }}>allam-2-7b</option>
-                        <option value="llama3-70b-8192" {{ 'selected' if config.model == 'llama3-70b-8192' else '' }}>llama3-70b-8192</option>
+                        <option value="groq/compound" {{ 'selected' if config.model == 'groq/compound' else '' }}>groq/compound</option>
+                        <option value="openai/gpt-oss-20b" {{ 'selected' if config.model == 'openai/gpt-oss-20b' else '' }}>openai/gpt-oss-20b</option>
+                        <option value="openai/gpt-oss-120b" {{ 'selected' if config.model == 'openai/gpt-oss-120b' else '' }}>openai/gpt-oss-120b</option>
+                        <option value="qwen/qwen3.8-27b" {{ 'selected' if config.model == 'qwen/qwen3.8-27b' else '' }}>qwen/qwen3.8-27b</option>
                     </select>
                 </div>
             </div>
